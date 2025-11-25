@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: whatsapp-message-broadcast
+
+server:
+  port: 9090
+
+whatsapp:
+  phone-number-id: YOUR_PHONE_NUMBER_ID
+  access-token: YOUR_PERMANENT_ACCESS_TOKEN
+  api-version: v0.24

@@ -89,4 +89,97 @@ public class WhatsAppService {
         return responses;
     }
 
+    // Upload media file to WhatsApp and get Media ID
+    public String uploadMedia(org.springframework.web.multipart.MultipartFile file) throws Exception {
+        String url = String.format("https://graph.facebook.com/%s/%s/media", apiVersion, phoneNumberId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(accessToken);
+
+        org.springframework.util.LinkedMultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+        body.add("messaging_product", "whatsapp");
+        body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        });
+        body.add("type", file.getContentType());
+
+        org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, Object>> entity = new org.springframework.http.HttpEntity<>(
+                body, headers);
+
+        Map response = restTemplate.postForObject(url, entity, Map.class);
+        return (String) response.get("id");
+    }
+
+    // Send image message via URL
+    public Map<String, Object> sendImageByUrl(String to, String imageUrl, String caption) {
+        String url = buildUrl();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "image");
+
+        Map<String, Object> image = new HashMap<>();
+        image.put("link", imageUrl);
+        if (caption != null && !caption.isEmpty()) {
+            image.put("caption", caption);
+        }
+        payload.put("image", image);
+
+        org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(
+                payload, headers);
+
+        return restTemplate.postForObject(url, entity, Map.class);
+    }
+
+    // Send image message via Media ID
+    public Map<String, Object> sendImageByMediaId(String to, String mediaId, String caption) {
+        String url = buildUrl();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "image");
+
+        Map<String, Object> image = new HashMap<>();
+        image.put("id", mediaId);
+        if (caption != null && !caption.isEmpty()) {
+            image.put("caption", caption);
+        }
+        payload.put("image", image);
+
+        org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(
+                payload, headers);
+
+        return restTemplate.postForObject(url, entity, Map.class);
+    }
+
+    // Broadcast image to multiple recipients
+    public List<Map<String, Object>> broadcastImage(String imageUrl, String caption, List<String> recipients) {
+        List<Map<String, Object>> responses = new ArrayList<>();
+        for (String recipient : recipients) {
+            try {
+                responses.add(sendImageByUrl(recipient, imageUrl, caption));
+            } catch (Exception e) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("recipient", recipient);
+                error.put("error", e.getMessage());
+                responses.add(error);
+            }
+        }
+        return responses;
+    }
+
 }

@@ -9,3 +9,7 @@ whatsapp:
   phone-number-id: YOUR_PHONE_NUMBER_ID
   access-token: YOUR_PERMANENT_ACCESS_TOKEN
   api-version: v0.24
+
+file:
+  upload:
+    directory: src/main/resources/uploads
